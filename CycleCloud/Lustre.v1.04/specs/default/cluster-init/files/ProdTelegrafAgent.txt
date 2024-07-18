@@ -1,0 +1,152 @@
+# Configuration for telegraf agent
+[agent]
+  ## Default data collection interval for all inputs
+  interval = "10s"
+  ## Rounds collection interval to 'interval'
+  ## ie, if interval="10s" then always collect on :00, :10, :20, etc.
+  round_interval = true
+
+  ## Telegraf will send metrics to outputs in batches of at most
+  ## metric_batch_size metrics.
+  ## This controls the size of writes that Telegraf sends to output plugins.
+  metric_batch_size = 1000
+
+  ## For failed writes, telegraf will cache metric_buffer_limit metrics for each
+  ## output, and will flush this buffer on a successful write. Oldest metrics
+  ## are dropped first when this buffer fills.
+  ## This buffer only fills when writes fail to output plugin(s).
+  metric_buffer_limit = 10000
+
+  ## Collection jitter is used to jitter the collection by a random amount.
+  ## Each plugin will sleep for a random time within jitter before collecting.
+  ## This can be used to avoid many plugins querying things like sysfs at the
+  ## same time, which can have a measurable effect on the system.
+  collection_jitter = "0s"
+
+  ## Default flushing interval for all outputs. Maximum flush_interval will be
+  ## flush_interval + flush_jitter
+  flush_interval = "10s"
+  ## Jitter the flush interval by a random amount. This is primarily to avoid
+  ## large write spikes for users running a large number of telegraf instances.
+  ## ie, a jitter of 5s and interval 10s means flushes will happen every 10-15s
+  flush_jitter = "0s"
+
+  ## By default or when set to "0s", precision will be set to the same
+  ## timestamp order as the collection interval, with the maximum being 1s.
+  ##   ie, when interval = "10s", precision will be "1s"
+  ##       when interval = "250ms", precision will be "1ms"
+  ## Precision will NOT be used for service inputs. It is up to each individual
+  ## service input to set the timestamp at the appropriate precision.
+  ## Valid time units are "ns", "us" (or "µs"), "ms", "s".
+  precision = ""
+
+  ## Logging configuration:
+  ## Run telegraf with debug log messages.
+  debug = false
+  ## Run telegraf in quiet mode (error log messages only).
+  quiet = false
+  ## Specify the log file name. The empty string means to log to stderr.
+  logfile = "/etc/telegraf/telegraf.log"
+
+  ## Override default hostname, if empty use os.Hostname()
+  hostname = "__HOST_NAME__"
+  ## If set to true, do no set the "host" tag in the telegraf agent.
+  omit_hostname = false
+[[outputs.influxdb_v2]]	
+  ## The URLs of the InfluxDB cluster nodes.
+  ##
+  ## Multiple URLs can be specified for a single cluster, only ONE of the
+  ## urls will be written to each interval.
+  ## urls exp: http://127.0.0.1:8086
+  urls = ["__URL__"]
+
+  ## Token for authentication.
+  token = "__TOKEN__"
+
+  ## Organization is the name of the organization you wish to write to; must exist.
+  organization = "__ORG__"
+
+  ## Destination bucket to write into.
+  bucket = "__BUCKET__"
+
+[[inputs.cpu]]
+  ## Whether to report per-cpu stats or not
+  percpu = true
+  ## Whether to report total system cpu stats or not
+  totalcpu = true
+  ## If true, collect raw CPU time metrics.
+  collect_cpu_time = false
+  ## If true, compute and report the sum of all non-idle CPU states.
+  report_active = false
+[[inputs.disk]]
+  ## By default stats will be gathered for all mount points.
+  ## Set mount_points will restrict the stats to only the specified mount points.
+  # mount_points = ["/"]
+  ## Ignore mount points by filesystem type.
+  ignore_fs = ["tmpfs", "devtmpfs", "devfs", "overlay", "aufs", "squashfs"]
+[[inputs.diskio]]
+[[inputs.mem]]
+[[inputs.net]]
+[[inputs.processes]]
+[[inputs.swap]]
+[[inputs.system]]
+
+
+
+# Read metrics from local Lustre service on OST, MDS
+[[inputs.lustre2]]
+  ## An array of /proc globs to search for Lustre stats
+  ## If not specified, the default will work on Lustre 2.5.x
+  ##
+  ost_procfiles = ["/proc/fs/lustre/obdfilter/*/stats", "/proc/fs/lustre/osd-ldiskfs/*/stats", "/proc/fs/lustre/obdfilter/*/job_stats"]
+  mds_procfiles = ["/proc/fs/lustre/mdt/*/md_stats", "/proc/fs/lustre/mdt/*/job_stats"]
+   
+   # Read stats about given file(s)
+[[inputs.filestat]]
+  ## Files to gather stats about.
+  ## These accept standard unix glob matching rules, but with the addition of
+  ## ** as a "super asterisk". See https://github.com/gobwas/glob.
+  files = ["/etc/telegraf/telegraf.conf", "/var/log/**.log"]
+
+  ## If true, read the entire file and calculate an md5 checksum.
+  md5 = false
+  
+  [[inputs.filecount]]
+  ## Directory to gather stats about.
+  ##   deprecated in 1.9; use the directories option
+  # directory = "/var/cache/apt/archives"
+
+  ## Directories to gather stats about.
+  ## This accept standard unit glob matching rules, but with the addition of
+  ## ** as a "super asterisk". ie:
+  ##   /var/log/**    -> recursively find all directories in /var/log and count files in each directories
+  ##   /var/log/*/*   -> find all directories with a parent dir in /var/log and count files in each directories
+  ##   /var/log       -> count all files in /var/log and all of its subdirectories
+  directories = ["/var/cache/apt", "/tmp"]
+
+  ## Only count files that match the name pattern. Defaults to "*".
+  name = "*"
+
+  ## Count files in subdirectories. Defaults to true.
+  recursive = true
+
+  ## Only count regular files. Defaults to true.
+  regular_only = true
+
+  ## Follow all symlinks while walking the directory tree. Defaults to false.
+  follow_symlinks = false
+
+  ## Only count files that are at least this size. If size is
+  ## a negative number, only count files that are smaller than the
+  ## absolute value of size. Acceptable units are B, KiB, MiB, KB, ...
+  ## Without quotes and units, interpreted as size in bytes.
+  size = "0B"
+
+  ## Only count files that have not been touched for at least this
+  ## duration. If mtime is negative, only count files that have been
+  ## touched in this duration. Defaults to "0s".
+  mtime = "0s"
+  
+  [[inputs.procstat]]
+  exe = "."
+  pid_tag = true

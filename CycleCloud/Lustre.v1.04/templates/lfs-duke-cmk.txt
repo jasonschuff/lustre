@@ -1,0 +1,911 @@
+
+################################
+## Cluster Configuration File ##
+################################
+
+[cluster lfs]
+FormLayout = selectionpanel
+Category = Filesystems
+IconURL = http://lustre.org/wp-content/themes/lustre-opensfs/library/images/print-logo.png
+AutoScale = false
+UseLowPrio = false
+
+    [[node defaults]]
+    UsePublicNetwork = $UsePublicNetwork
+    Credentials = $Credentials    
+    ImageName = $ImageName
+    SubnetId = $SubnetId
+    Region = $Region
+    KeyPairLocation = ~/.ssh/cyclecloud.pem
+		
+		[[[configuration]]]
+		cyclecloud.selinux.policy = disabled
+		
+		lustre.version = $LustreVersion
+		lustre.use_nvme = $LustreUseNVME
+		lustre.use_raid = $LustreUseOSSDiskStriping
+        lustre.use_hsm = $LustreUseHsm
+        lustre.storage_account = $LustreBlobAccount
+        lustre.storage_sas = $LustreBlobSAS
+        lustre.storage_container = $LustreBlobContainer
+		lustre.storage_importpath = $LustreBlobImportPath
+		
+        lustre.use_hsm2 = $LustreUseHsm2
+        lustre.storage_account2 = $LustreBlobAccount2
+        lustre.storage_sas2 = $LustreBlobSAS2
+        lustre.storage_container2 = $LustreBlobContainer2
+		lustre.storage_importpath2 = $LustreBlobImportPath2
+
+		lustre.use_telegraf = $UseTelegraf
+		lustre.telegraf_url = $TelegrafURL
+		lustre.telegraf_token = $TelegrafToken
+		lustre.telegraf_org = $TelegrafOrg
+		lustre.telegraf_bucket = $TelegrafBucket
+
+        lustre.use_log_analytics = $LustreUseLogAnalytics
+        lustre.log_analytics.name = $LogAnalyticsName
+        lustre.log_analytics.workspace_id = $LogAnalyticsWorkspaceId
+        lustre.log_analytics.key = $LogAnalyticsKey
+		
+		[[[configuration cyclecloud.mounts.additional_nfs]]]
+        disabled = ${AdditionalNAS isnt true}
+        type = nfs
+        address = $AdditonalNFSAddress
+        mountpoint = $AdditionalNFSMountPoint
+        export_path = $AdditionalNFSExportPath
+        options = $AdditionalNFSMountOptions
+		
+		[[[volume boot]]]
+		Azure.Encryption.Type = EncryptionAtRestWithCustomerKey
+		Azure.Encryption.DiskEncryptionSetId = /subscriptions/e18fb6de-e5db-4417-902f-ed2173283784/resourceGroups/dhp-som-hpc-main/providers/Microsoft.Compute/diskEncryptionSets/dhp-som-hpc-des01
+		
+    [[node mds]]
+    MachineType = $MDSMachineType
+    IsReturnProxy = $ReturnProxy
+    
+		
+		[[[volume mdtdata1]]]
+		Size = $LustreMDSDiskSize
+		Persistent = false
+		StorageAccountType = $LustreMDSDiskType
+		Disabled = False
+		Azure.Encryption.Type = EncryptionAtRestWithCustomerKey
+		Azure.Encryption.DiskEncryptionSetId = /subscriptions/e18fb6de-e5db-4417-902f-ed2173283784/resourceGroups/dhp-som-hpc-main/providers/Microsoft.Compute/diskEncryptionSets/dhp-som-hpc-des01
+
+		[[[volume mdtdata2]]]
+		Size = $LustreMDSDiskSize
+		Persistent = false
+		StorageAccountType = $LustreMDSDiskType
+		disabled = ${LustreMDSDiskCount <= 1}
+		Azure.Encryption.Type = EncryptionAtRestWithCustomerKey
+		Azure.Encryption.DiskEncryptionSetId = /subscriptions/e18fb6de-e5db-4417-902f-ed2173283784/resourceGroups/dhp-som-hpc-main/providers/Microsoft.Compute/diskEncryptionSets/dhp-som-hpc-des01
+		
+		[[[volume mdtdata3]]]
+		Size = $LustreMDSDiskSize
+		Persistent = false
+		StorageAccountType = $LustreMDSDiskType
+		disabled = ${LustreMDSDiskCount <= 2}
+		Azure.Encryption.Type = EncryptionAtRestWithCustomerKey
+		Azure.Encryption.DiskEncryptionSetId = /subscriptions/e18fb6de-e5db-4417-902f-ed2173283784/resourceGroups/dhp-som-hpc-main/providers/Microsoft.Compute/diskEncryptionSets/dhp-som-hpc-des01
+		
+		[[[volume mdtdata4]]]
+		Size = $LustreMDSDiskSize
+		Persistent = false
+		StorageAccountType = $LustreMDSDiskType
+		disabled = ${LustreMDSDiskCount <= 3}
+		Azure.Encryption.Type = EncryptionAtRestWithCustomerKey
+		Azure.Encryption.DiskEncryptionSetId = /subscriptions/e18fb6de-e5db-4417-902f-ed2173283784/resourceGroups/dhp-som-hpc-main/providers/Microsoft.Compute/diskEncryptionSets/dhp-som-hpc-des01
+		
+
+		
+        [[[configuration]]]
+        
+		cyclecloud.selinux.policy = disabled
+
+        [[[cluster-init lfs:default:1.0.3]]]
+        Optional = True
+
+        [[[network-interface eth0]]]
+        AssociatePublicIpAddress = $UsePublicNetwork
+		PrivateIp = ${ifThenElse(UsePrivateIPAddress, PrivateIPAddress, undefined)}
+
+        [[[input-endpoint ganglia]]]
+        PrivatePort = 8652
+        PublicPort = 8652
+
+    [[nodearray oss]]
+    MachineType = $OSSMachineType
+    Azure.SingleScaleset = True
+    InitialCount = $LustreOSSCount
+
+    [[[volume data1]]]
+	Size = $LustreOSSDiskSize
+	Persistent = false
+	StorageAccountType = $LustreOSSDiskType
+	disabled = ${ifThenElse(LustreUseNVME, True, False)}
+	Azure.Encryption.Type = EncryptionAtRestWithCustomerKey
+	Azure.Encryption.DiskEncryptionSetId = /subscriptions/e18fb6de-e5db-4417-902f-ed2173283784/resourceGroups/dhp-som-hpc-main/providers/Microsoft.Compute/diskEncryptionSets/dhp-som-hpc-des01
+	
+	[[[volume data2]]]
+	Size = $LustreOSSDiskSize
+	Persistent = false
+	StorageAccountType = $LustreOSSDiskType
+	disabled = ${LustreOSSDiskCount <= 1}
+	Azure.Encryption.Type = EncryptionAtRestWithCustomerKey
+	Azure.Encryption.DiskEncryptionSetId = /subscriptions/e18fb6de-e5db-4417-902f-ed2173283784/resourceGroups/dhp-som-hpc-main/providers/Microsoft.Compute/diskEncryptionSets/dhp-som-hpc-des01
+
+	[[[volume data3]]]
+	Size = $LustreOSSDiskSize
+	Persistent = false
+	StorageAccountType = $LustreOSSDiskType
+	disabled = ${LustreOSSDiskCount <= 2}
+	Azure.Encryption.Type = EncryptionAtRestWithCustomerKey
+	Azure.Encryption.DiskEncryptionSetId = /subscriptions/e18fb6de-e5db-4417-902f-ed2173283784/resourceGroups/dhp-som-hpc-main/providers/Microsoft.Compute/diskEncryptionSets/dhp-som-hpc-des01
+	
+	[[[volume data4]]]
+	Size = $LustreOSSDiskSize
+	Persistent = false
+	StorageAccountType = $LustreOSSDiskType
+	disabled = ${LustreOSSDiskCount <= 3}
+	Azure.Encryption.Type = EncryptionAtRestWithCustomerKey
+	Azure.Encryption.DiskEncryptionSetId = /subscriptions/e18fb6de-e5db-4417-902f-ed2173283784/resourceGroups/dhp-som-hpc-main/providers/Microsoft.Compute/diskEncryptionSets/dhp-som-hpc-des01
+	
+	[[[volume data5]]]
+	Size = $LustreOSSDiskSize
+	Persistent = false
+	StorageAccountType = $LustreOSSDiskType
+	disabled = ${LustreOSSDiskCount <= 4}
+	Azure.Encryption.Type = EncryptionAtRestWithCustomerKey
+	Azure.Encryption.DiskEncryptionSetId = /subscriptions/e18fb6de-e5db-4417-902f-ed2173283784/resourceGroups/dhp-som-hpc-main/providers/Microsoft.Compute/diskEncryptionSets/dhp-som-hpc-des01
+
+	[[[volume data6]]]
+	Size = $LustreOSSDiskSize
+	Persistent = false
+	StorageAccountType = $LustreOSSDiskType
+	disabled = ${LustreOSSDiskCount <= 5}
+	Azure.Encryption.Type = EncryptionAtRestWithCustomerKey
+	Azure.Encryption.DiskEncryptionSetId = /subscriptions/e18fb6de-e5db-4417-902f-ed2173283784/resourceGroups/dhp-som-hpc-main/providers/Microsoft.Compute/diskEncryptionSets/dhp-som-hpc-des01
+
+	[[[volume data7]]]
+	Size = $LustreOSSDiskSize
+	Persistent = false
+	StorageAccountType = $LustreOSSDiskType
+	disabled = ${LustreOSSDiskCount <= 6}
+	Azure.Encryption.Type = EncryptionAtRestWithCustomerKey
+	Azure.Encryption.DiskEncryptionSetId = /subscriptions/e18fb6de-e5db-4417-902f-ed2173283784/resourceGroups/dhp-som-hpc-main/providers/Microsoft.Compute/diskEncryptionSets/dhp-som-hpc-des01
+
+	[[[volume data8]]]
+	Size = $LustreOSSDiskSize
+	Persistent = false
+	StorageAccountType = $LustreOSSDiskType
+	disabled = ${LustreOSSDiskCount <= 7}
+	Azure.Encryption.Type = EncryptionAtRestWithCustomerKey
+	Azure.Encryption.DiskEncryptionSetId = /subscriptions/e18fb6de-e5db-4417-902f-ed2173283784/resourceGroups/dhp-som-hpc-main/providers/Microsoft.Compute/diskEncryptionSets/dhp-som-hpc-des01
+
+	[[[volume data9]]]
+	Size = $LustreOSSDiskSize
+	Persistent = false
+	StorageAccountType = $LustreOSSDiskType
+	disabled = ${LustreOSSDiskCount <= 8}
+	Azure.Encryption.Type = EncryptionAtRestWithCustomerKey
+	Azure.Encryption.DiskEncryptionSetId = /subscriptions/e18fb6de-e5db-4417-902f-ed2173283784/resourceGroups/dhp-som-hpc-main/providers/Microsoft.Compute/diskEncryptionSets/dhp-som-hpc-des01
+
+	[[[volume data10]]]
+	Size = $LustreOSSDiskSize
+	Persistent = false
+	StorageAccountType = $LustreOSSDiskType
+	disabled = ${LustreOSSDiskCount <= 9}
+	Azure.Encryption.Type = EncryptionAtRestWithCustomerKey
+	Azure.Encryption.DiskEncryptionSetId = /subscriptions/e18fb6de-e5db-4417-902f-ed2173283784/resourceGroups/dhp-som-hpc-main/providers/Microsoft.Compute/diskEncryptionSets/dhp-som-hpc-des01
+
+	[[[volume data11]]]
+	Size = $LustreOSSDiskSize
+	Persistent = false
+	StorageAccountType = $LustreOSSDiskType
+	disabled = ${LustreOSSDiskCount <= 10}
+	Azure.Encryption.Type = EncryptionAtRestWithCustomerKey
+	Azure.Encryption.DiskEncryptionSetId = /subscriptions/e18fb6de-e5db-4417-902f-ed2173283784/resourceGroups/dhp-som-hpc-main/providers/Microsoft.Compute/diskEncryptionSets/dhp-som-hpc-des01
+
+	[[[volume data12]]]
+	Size = $LustreOSSDiskSize
+	Persistent = false
+	StorageAccountType = $LustreOSSDiskType
+	disabled = ${LustreOSSDiskCount <= 11}
+	Azure.Encryption.Type = EncryptionAtRestWithCustomerKey
+	Azure.Encryption.DiskEncryptionSetId = /subscriptions/e18fb6de-e5db-4417-902f-ed2173283784/resourceGroups/dhp-som-hpc-main/providers/Microsoft.Compute/diskEncryptionSets/dhp-som-hpc-des01
+
+	[[[volume data13]]]
+	Size = $LustreOSSDiskSize
+	Persistent = false
+	StorageAccountType = $LustreOSSDiskType
+	disabled = ${LustreOSSDiskCount <= 12}
+	Azure.Encryption.Type = EncryptionAtRestWithCustomerKey
+	Azure.Encryption.DiskEncryptionSetId = /subscriptions/e18fb6de-e5db-4417-902f-ed2173283784/resourceGroups/dhp-som-hpc-main/providers/Microsoft.Compute/diskEncryptionSets/dhp-som-hpc-des01
+
+	[[[volume data14]]]
+	Size = $LustreOSSDiskSize
+	Persistent = false
+	StorageAccountType = $LustreOSSDiskType
+	disabled = ${LustreOSSDiskCount <= 13}
+	Azure.Encryption.Type = EncryptionAtRestWithCustomerKey
+	Azure.Encryption.DiskEncryptionSetId = /subscriptions/e18fb6de-e5db-4417-902f-ed2173283784/resourceGroups/dhp-som-hpc-main/providers/Microsoft.Compute/diskEncryptionSets/dhp-som-hpc-des01
+
+	[[[volume data15]]]
+	Size = $LustreOSSDiskSize
+	Persistent = false
+	StorageAccountType = $LustreOSSDiskType
+	disabled = ${LustreOSSDiskCount <= 14}
+	Azure.Encryption.Type = EncryptionAtRestWithCustomerKey
+	Azure.Encryption.DiskEncryptionSetId = /subscriptions/e18fb6de-e5db-4417-902f-ed2173283784/resourceGroups/dhp-som-hpc-main/providers/Microsoft.Compute/diskEncryptionSets/dhp-som-hpc-des01
+
+	[[[volume data16]]]
+	Size = $LustreOSSDiskSize
+	Persistent = false
+	StorageAccountType = $LustreOSSDiskType
+	disabled = ${LustreOSSDiskCount <= 15}
+	Azure.Encryption.Type = EncryptionAtRestWithCustomerKey
+	Azure.Encryption.DiskEncryptionSetId = /subscriptions/e18fb6de-e5db-4417-902f-ed2173283784/resourceGroups/dhp-som-hpc-main/providers/Microsoft.Compute/diskEncryptionSets/dhp-som-hpc-des01
+
+	[[[volume data17]]]
+	Size = $LustreOSSDiskSize
+	Persistent = false
+	StorageAccountType = $LustreOSSDiskType
+	disabled = ${LustreOSSDiskCount <= 16}
+	Azure.Encryption.Type = EncryptionAtRestWithCustomerKey
+	Azure.Encryption.DiskEncryptionSetId = /subscriptions/e18fb6de-e5db-4417-902f-ed2173283784/resourceGroups/dhp-som-hpc-main/providers/Microsoft.Compute/diskEncryptionSets/dhp-som-hpc-des01
+	
+	[[[volume data18]]]
+	Size = $LustreOSSDiskSize
+	Persistent = false
+	StorageAccountType = $LustreOSSDiskType
+	disabled = ${LustreOSSDiskCount <= 17}
+	Azure.Encryption.Type = EncryptionAtRestWithCustomerKey
+	Azure.Encryption.DiskEncryptionSetId = /subscriptions/e18fb6de-e5db-4417-902f-ed2173283784/resourceGroups/dhp-som-hpc-main/providers/Microsoft.Compute/diskEncryptionSets/dhp-som-hpc-des01
+
+	[[[volume data19]]]
+	Size = $LustreOSSDiskSize
+	Persistent = false
+	StorageAccountType = $LustreOSSDiskType
+	disabled = ${LustreOSSDiskCount <= 18}
+	Azure.Encryption.Type = EncryptionAtRestWithCustomerKey
+	Azure.Encryption.DiskEncryptionSetId = /subscriptions/e18fb6de-e5db-4417-902f-ed2173283784/resourceGroups/dhp-som-hpc-main/providers/Microsoft.Compute/diskEncryptionSets/dhp-som-hpc-des01
+
+	[[[volume data20]]]
+	Size = $LustreOSSDiskSize
+	Persistent = false
+	StorageAccountType = $LustreOSSDiskType
+	disabled = ${LustreOSSDiskCount <= 19}
+	Azure.Encryption.Type = EncryptionAtRestWithCustomerKey
+	Azure.Encryption.DiskEncryptionSetId = /subscriptions/e18fb6de-e5db-4417-902f-ed2173283784/resourceGroups/dhp-som-hpc-main/providers/Microsoft.Compute/diskEncryptionSets/dhp-som-hpc-des01
+	
+	[[[volume data21]]]
+	Size = $LustreOSSDiskSize
+	Persistent = false
+	StorageAccountType = $LustreOSSDiskType
+	disabled = ${LustreOSSDiskCount <= 20}
+	Azure.Encryption.Type = EncryptionAtRestWithCustomerKey
+	Azure.Encryption.DiskEncryptionSetId = /subscriptions/e18fb6de-e5db-4417-902f-ed2173283784/resourceGroups/dhp-som-hpc-main/providers/Microsoft.Compute/diskEncryptionSets/dhp-som-hpc-des01
+	
+	[[[volume data22]]]
+	Size = $LustreOSSDiskSize
+	Persistent = false
+	StorageAccountType = $LustreOSSDiskType
+	disabled = ${LustreOSSDiskCount <= 21}
+	Azure.Encryption.Type = EncryptionAtRestWithCustomerKey
+	Azure.Encryption.DiskEncryptionSetId = /subscriptions/e18fb6de-e5db-4417-902f-ed2173283784/resourceGroups/dhp-som-hpc-main/providers/Microsoft.Compute/diskEncryptionSets/dhp-som-hpc-des01
+
+	[[[volume data23]]]
+	Size = $LustreOSSDiskSize
+	Persistent = false
+	StorageAccountType = $LustreOSSDiskType
+	disabled = ${LustreOSSDiskCount <= 22}
+	Azure.Encryption.Type = EncryptionAtRestWithCustomerKey
+	Azure.Encryption.DiskEncryptionSetId = /subscriptions/e18fb6de-e5db-4417-902f-ed2173283784/resourceGroups/dhp-som-hpc-main/providers/Microsoft.Compute/diskEncryptionSets/dhp-som-hpc-des01
+
+	[[[volume data24]]]
+	Size = $LustreOSSDiskSize
+	Persistent = false
+	StorageAccountType = $LustreOSSDiskType
+	disabled = ${LustreOSSDiskCount <= 23}
+	Azure.Encryption.Type = EncryptionAtRestWithCustomerKey
+	Azure.Encryption.DiskEncryptionSetId = /subscriptions/e18fb6de-e5db-4417-902f-ed2173283784/resourceGroups/dhp-som-hpc-main/providers/Microsoft.Compute/diskEncryptionSets/dhp-som-hpc-des01
+
+	[[[volume data25]]]
+	Size = $LustreOSSDiskSize
+	Persistent = false
+	StorageAccountType = $LustreOSSDiskType
+	disabled = ${LustreOSSDiskCount <= 24}
+	Azure.Encryption.Type = EncryptionAtRestWithCustomerKey
+	Azure.Encryption.DiskEncryptionSetId = /subscriptions/e18fb6de-e5db-4417-902f-ed2173283784/resourceGroups/dhp-som-hpc-main/providers/Microsoft.Compute/diskEncryptionSets/dhp-som-hpc-des01
+
+	[[[volume data26]]]
+	Size = $LustreOSSDiskSize
+	Persistent = false
+	StorageAccountType = $LustreOSSDiskType
+	disabled = ${LustreOSSDiskCount <= 25}
+	Azure.Encryption.Type = EncryptionAtRestWithCustomerKey
+	Azure.Encryption.DiskEncryptionSetId = /subscriptions/e18fb6de-e5db-4417-902f-ed2173283784/resourceGroups/dhp-som-hpc-main/providers/Microsoft.Compute/diskEncryptionSets/dhp-som-hpc-des01
+
+	[[[volume data27]]]
+	Size = $LustreOSSDiskSize
+	Persistent = false
+	StorageAccountType = $LustreOSSDiskType
+	disabled = ${LustreOSSDiskCount <= 26}
+	Azure.Encryption.Type = EncryptionAtRestWithCustomerKey
+	Azure.Encryption.DiskEncryptionSetId = /subscriptions/e18fb6de-e5db-4417-902f-ed2173283784/resourceGroups/dhp-som-hpc-main/providers/Microsoft.Compute/diskEncryptionSets/dhp-som-hpc-des01
+
+	[[[volume data28]]]
+	Size = $LustreOSSDiskSize
+	Persistent = false
+	StorageAccountType = $LustreOSSDiskType
+	disabled = ${LustreOSSDiskCount <= 27}
+	Azure.Encryption.Type = EncryptionAtRestWithCustomerKey
+	Azure.Encryption.DiskEncryptionSetId = /subscriptions/e18fb6de-e5db-4417-902f-ed2173283784/resourceGroups/dhp-som-hpc-main/providers/Microsoft.Compute/diskEncryptionSets/dhp-som-hpc-des01
+
+	[[[volume data29]]]
+	Size = $LustreOSSDiskSize
+	Persistent = false
+	StorageAccountType = $LustreOSSDiskType
+	disabled = ${LustreOSSDiskCount <= 28}
+	Azure.Encryption.Type = EncryptionAtRestWithCustomerKey
+	Azure.Encryption.DiskEncryptionSetId = /subscriptions/e18fb6de-e5db-4417-902f-ed2173283784/resourceGroups/dhp-som-hpc-main/providers/Microsoft.Compute/diskEncryptionSets/dhp-som-hpc-des01
+
+	[[[volume data30]]]
+	Size = $LustreOSSDiskSize
+	Persistent = false
+	StorageAccountType = $LustreOSSDiskType
+	disabled = ${LustreOSSDiskCount <= 29}
+	Azure.Encryption.Type = EncryptionAtRestWithCustomerKey
+	Azure.Encryption.DiskEncryptionSetId = /subscriptions/e18fb6de-e5db-4417-902f-ed2173283784/resourceGroups/dhp-som-hpc-main/providers/Microsoft.Compute/diskEncryptionSets/dhp-som-hpc-des01
+
+	[[[volume data31]]]
+	Size = $LustreOSSDiskSize
+	Persistent = false
+	StorageAccountType = $LustreOSSDiskType
+	disabled = ${LustreOSSDiskCount <= 30}
+	Azure.Encryption.Type = EncryptionAtRestWithCustomerKey
+	Azure.Encryption.DiskEncryptionSetId = /subscriptions/e18fb6de-e5db-4417-902f-ed2173283784/resourceGroups/dhp-som-hpc-main/providers/Microsoft.Compute/diskEncryptionSets/dhp-som-hpc-des01
+
+	[[[volume data32]]]
+	Size = $LustreOSSDiskSize
+	Persistent = false
+	StorageAccountType = $LustreOSSDiskType
+	disabled = ${LustreOSSDiskCount <= 31}
+	Azure.Encryption.Type = EncryptionAtRestWithCustomerKey
+	Azure.Encryption.DiskEncryptionSetId = /subscriptions/e18fb6de-e5db-4417-902f-ed2173283784/resourceGroups/dhp-som-hpc-main/providers/Microsoft.Compute/diskEncryptionSets/dhp-som-hpc-des01
+	
+	[[[configuration]]]
+        cyclecloud.selinux.policy = disabled
+		
+        [[[cluster-init lfs:default:1.0.3]]]
+        Optional = True
+
+	[[node policyserver]]
+    MachineType = $RobinMachineType
+    ImageName = $RobinImageName
+    IsReturnProxy = $ReturnProxy
+    AdditionalClusterInitSpecs = $policyServerClusterInitSpecs
+    
+        [[[configuration]]]
+        cyclecloud.selinux.policy = disabled
+		
+		lustre.cluster_name = ${ClusterName}
+        lustre.version = $RobinLustreVersion
+        lustre.mount_point = $RobinLustreMountPoint
+		lustre.execute_post_script = $ExecutePostScript
+		lustre.post_script_path = $PostScriptPath
+		
+		robinhood.use_policy_file = $AdditionalPolicyFile
+		robinhood.policy_file = $RobinhoodPolicyFile
+
+        [[[cluster-init lfs:client:1.0.3]]]
+		[[[cluster-init lfs:robin:1.0.3]]]	
+
+        [[[network-interface eth0]]]
+        AssociatePublicIpAddress = $UsePublicNetwork
+		
+		[[[input-endpoint robinhoodwebui]]]
+        PrivatePort = 80
+        PublicPort = 80
+
+        [[[volume boot]]]
+        Size = 64
+        StorageAccountType = StandardSSD_LRS
+		Azure.Encryption.Type = EncryptionAtRestWithCustomerKey
+		Azure.Encryption.DiskEncryptionSetId = /subscriptions/e18fb6de-e5db-4417-902f-ed2173283784/resourceGroups/dhp-som-hpc-main/providers/Microsoft.Compute/diskEncryptionSets/dhp-som-hpc-des01
+
+
+[parameters About]
+Order = 1
+
+    [[parameters About Cyclecloud Lustre Template]]
+
+        [[[parameter cyclecloud-lustre]]]
+        HideLabel = true
+        Config.Plugin = pico.widget.HtmlTemplateWidget
+        Config.Template = '''<p>Lustre is a High Performance Parallel Filesystem, often used in High Performance Computing. These Cyclecloud project and templates allow to quickly set up a Lustre cluster, consisting of a MDS node and one or more OSS nodes.
+		This cluster is designed to be for scratch data; utilizing the local NVME drives of the L_v2 nodes.
+		On top of this, HSM can be activated to import data from, and archive to Azure blobs.</p>'''
+
+    [[parameters Cyclecloud Lustre Template Version]]
+		
+		[[[parameter cyclecloud-lustre-version]]]
+        HideLabel = true
+        Config.Plugin = pico.widget.HtmlTemplateWidget
+        Config.Template = '''<p>Template Version 1.02</p>'''
+
+[parameters Required Settings]
+Order = 10
+
+    [[parameters Virtual Machines ]]
+    Description = "The cluster, in this case, has two roles: the scheduler master-node with shared filer and the execute hosts. Configure which VM types to use based on the requirements of your application."
+    Order = 20
+
+        [[[parameter Region]]]
+        Label = Region
+        Description = Deployment Location
+        ParameterType = Cloud.Region
+        DefaultValue = centralus
+
+        [[[parameter MDSMachineType]]]
+        Label = MDS VM Type
+        Description = The VM type for the MDS/MGS node of Lustre.
+        ParameterType = Cloud.MachineType
+        DefaultValue = Standard_DS14_v2
+		
+		[[[parameter OSSMachineType]]]
+        Label = OSS VM Type
+        Description = The VM type for the OSS nodes of Lustre.
+        ParameterType = Cloud.MachineType
+        DefaultValue = Standard_DS14_v2
+
+		[[[parameter RobinMachineType]]]
+        Label = Robinhood VM Type
+        Description = The VM type for the Robinhood node
+        ParameterType = Cloud.MachineType
+        DefaultValue = Standard_DS14_v2
+
+    [[parameters Networking]]
+    Order = 40
+
+        [[[parameter SubnetId]]]
+        Label = Subnet ID
+        Description = Subnet Resource Path (ResourceGroup/VirtualNetwork/Subnet)
+        ParameterType = Azure.Subnet
+        Required = True
+		
+[parameters Network Attached Storage]
+Order = 15
+
+    [[parameters Additional NFS Mount]]
+    Order = 20
+        [[[parameter Additional NFS Mount Readme]]]
+        HideLabel = true
+        Config.Plugin = pico.widget.HtmlTemplateWidget
+        Config.Template := "<p>Mount another NFS endpoint on the cluster nodes</p>"
+        Order = 20
+
+        [[[parameter AdditionalNAS]]]
+        HideLabel = true
+        DefaultValue = false
+        Widget.Plugin = pico.form.BooleanCheckBox
+        Widget.Label = Add NFS mount
+
+        [[[parameter AdditonalNFSAddress]]]
+        Label = NFS IP Address 
+        Description = The IP address or hostname of the NFS server. Also accepts a list comma-separated addresses, for example, to mount a frontend load-balanced Azure HPC Cache.
+        Config.ParameterType = String
+        Conditions.Excluded := AdditionalNAS isnt true
+
+        [[[parameter AdditionalNFSMountPoint]]]
+        Label = NFS Mount Point
+        Description = The path at which to mount the Filesystem
+        DefaultValue = /data
+        Conditions.Excluded := AdditionalNAS isnt true
+
+        [[[parameter AdditionalNFSExportPath]]]
+        Label = NFS Export Path
+        Description = The path exported by the file system
+        DefaultValue = /data
+        Conditions.Excluded := AdditionalNAS isnt true
+
+        [[[parameter AdditionalNFSMountOptions]]]
+        Label = NFS Mount Options
+        Description = NFS Client Mount Options
+        Conditions.Excluded := AdditionalNAS isnt true
+    
+
+[parameters Advanced Settings]
+Order = 20
+
+    [[parameters Azure Settings]]
+    Order = 10 
+
+        [[[parameter Credentials]]]
+        Description = The credentials for the cloud provider
+        ParameterType = Cloud.Credentials
+
+
+    [[parameters Software]]
+    Description = "Specify the scheduling software, and base OS installed on all nodes, and optionally the cluster-init and chef versions from your Locker."
+    Order = 20
+
+        [[[parameter ImageName]]]
+        Label = Lustre Base OS
+        ParameterType = Cloud.Image
+        Config.OS = linux
+        DefaultValue = azhpc:azurehpc-lustre:azurehpc-lustre-2_12:latest
+        Config.Filter := Package === "cycle.image.centos7"
+
+    [[parameters Advanced Networking]]
+    Description = Advanced networking settings
+
+        [[[parameter ReturnProxy]]]
+        Label = Return Proxy
+        DefaultValue = false
+        ParameterType = Boolean
+        Config.Label = Use SSH tunnel to connect to CycleCloud (required if direct access is blocked)
+
+        [[[parameter UsePublicNetwork]]]
+        Label = Public Head Node
+        DefaultValue = true
+        ParameterType = Boolean
+        Config.Label = Access master node from the Internet
+
+        [[[parameter ExecuteNodesPublic]]]
+        Label = Public Execute
+        DefaultValue = false
+        ParameterType = Boolean
+        Config.Label = Access execute nodes from the Internet
+        Conditions.Excluded := UsePublicNetwork isnt true
+		
+		[[[parameter UsePrivateIPAddress]]]
+        Label = Private Address
+        DefaultValue = false
+        Widget.Plugin = pico.form.BooleanCheckBox
+        Config.Label = Assign a private static IP address to the head node
+
+        [[[parameter PrivateIPAddress]]]
+        Label = IP Address
+        Description = Enter the static or private IP address the head node will use
+        DefaultValue = 10.51.33.44
+        Conditions.Excluded := UsePrivateIPAddress is false
+
+[parameters Lustre Settings]
+Order = 30
+
+    [[parameters MDS Settings]]
+    Order = 10
+    Description = "Use a Lustre cluster as a NAS. Settings for defining the Lustre MDS node"
+
+        [[[parameter LustreVersion]]]
+        Label = Lustre Version
+        Description = The Lustre version to use
+        DefaultValue = "2.12.5"
+        Config.FreeForm = false
+        Config.Plugin = pico.control.AutoCompleteDropdown
+            [[[[list Config.Entries]]]]
+            Name = "2.12.4"
+            Label = "2.12.4"
+            [[[[list Config.Entries]]]]
+            Name = "2.12.5"
+            Label = "2.12.5"
+			[[[[list Config.Entries]]]]
+            Name = "2.12.7"
+            Label = "2.12.7"
+
+		[[[parameter LustreMDSDiskCount]]]
+        Label = MDS Data Disks
+        Description = The number of additional managed disks to attach to MDS node.
+        DefaultValue = 2
+        Config.Plugin = pico.form.NumberTextBox
+        Config.MinValue = 1
+        Config.IntegerOnly = true
+        Required = True
+
+        [[[parameter LustreMDSDiskSize]]]
+        Label = Disk Size
+        Description = The size of each additional managed disk attached to MDS node.
+        DefaultValue = 1024
+        Config.Plugin = pico.form.NumberTextBox
+        Config.MinValue = 100
+        Config.IntegerOnly = true
+        Required = True
+		
+        [[[parameter LustreMDSDiskType]]]
+        Label = Disk Type
+        Description = The type of each additional managed disks to attach to each OSS node.
+        DefaultValue = StandardSSD_LRS
+        Config.FreeForm = false
+        Config.Plugin = pico.control.AutoCompleteDropdown
+            [[[[list Config.Entries]]]]
+            Name = "Standard_LRS"
+            Label = "Standard_LRS"
+			[[[[list Config.Entries]]]]
+            Name = "StandardSSD_LRS"
+            Label = "StandardSSD_LRS"
+            [[[[list Config.Entries]]]]
+            Name = "Premium_LRS"
+            Label = "Premium_LRS"
+            [[[[list Config.Entries]]]]
+            Name = "UltraSSD_LRS"
+            Label = "UltraSSD_LRS"
+
+
+    [[parameters OSS Settings]]
+    Order = 15
+    Description = "Settings for defining the Lustre OSS node(s)"
+
+        
+        [[[parameter LustreOSSCount]]]
+        Label = OSS Nodes
+        Description = The number of additional OSS nodes to start.
+        DefaultValue = 1
+        Config.Plugin = pico.form.NumberTextBox
+        Config.MinValue = 0
+        Config.IntegerOnly = true
+        Required = True
+
+        [[[parameter LustreUseNVME]]]
+		Label = Use NVME
+        DefaultValue = false
+        Widget.Plugin = pico.form.BooleanCheckBox
+        Widget.Label = (Requires Lv2 series VM, will not attach additional disks)
+		
+		[[[parameter LustreUseOSSDiskStriping]]]
+		Label = Disk Striping
+        DefaultValue = false
+        Widget.Plugin = pico.form.BooleanCheckBox
+        Widget.Label = (Will utilize Raid 0 across all disks on each OSS node)
+
+        [[[parameter LustreOSSDiskCount]]]
+        Label = Additional Disks
+        Description = The number of additional managed disks to attach to each OSS node.
+        DefaultValue = 2
+        Config.Plugin = pico.form.NumberTextBox
+        Config.MinValue = 1
+        Config.IntegerOnly = true
+        Required = True
+		Conditions.Excluded := LustreUseNVME is True
+
+        [[[parameter LustreOSSDiskSize]]]
+        Label = Disk Size
+        Description = The size of each additional managed disk attached to each OSS node.
+        DefaultValue = 1024
+        Config.Plugin = pico.form.NumberTextBox
+        Config.MinValue = 100
+        Config.IntegerOnly = true
+        Required = True
+		Conditions.Excluded := LustreUseNVME is True
+
+        [[[parameter LustreOSSDiskType]]]
+        Label = Disk Type
+        Description = The type of each additional managed disks to attach to each OSS node.
+        DefaultValue = Standard_LRS
+        Config.FreeForm = false
+		Conditions.Excluded := LustreUseNVME is True
+        Config.Plugin = pico.control.AutoCompleteDropdown
+            [[[[list Config.Entries]]]]
+            Name = "Standard_LRS"
+            Label = "Standard_LRS"
+			[[[[list Config.Entries]]]]
+            Name = "StandardSSD_LRS"
+            Label = "StandardSSD_LRS"
+            [[[[list Config.Entries]]]]
+            Name = "Premium_LRS"
+            Label = "Premium_LRS"
+            [[[[list Config.Entries]]]]
+            Name = "UltraSSD_LRS"
+            Label = "UltraSSD_LRS"
+		
+
+    [[parameters HSM Settings]]
+    Order = 20
+    Description = "Lustre can use BLOB storage through HSM to import or archive data."
+
+        [[[parameter LustreUseHsm]]]
+        Label = Enable HSM
+        DefaultValue = false
+        Widget.Plugin = pico.form.BooleanCheckBox
+        Widget.Label = (requires storage details below)
+
+        [[[parameter LustreBlobAccount]]]
+        Label = Storage Account
+        Description = The blob account to which Lustre will sync.
+        DefaultValue = <blob account name> 
+        Conditions.Disabled := LustreUseHsm is false
+
+        [[[parameter LustreBlobSAS]]]
+        Label = Storage SAS Token
+        Description = The blob shared access signature token.
+        DefaultValue = <blob SAS token>
+        Conditions.Disabled := LustreUseHsm is false
+
+		[[[parameter LustreBlobContainer]]]
+        Label = Storage Container
+        Description = The blob container.
+        DefaultValue = <blob container>
+        Conditions.Disabled := LustreUseHsm is false
+
+		[[[parameter LustreBlobImportPath]]]
+        Label = Import Path
+        Description = The folder path to import from the container (Leave blank for all)
+        DefaultValue = ""
+        Conditions.Disabled := LustreUseHsm is false
+
+		
+	[[parameters 2nd HSM Settings]]
+    Order = 25
+    Description = "Utilize a 2nd BLOB storage through HSM to import or archive data."
+
+        [[[parameter LustreUseHsm2]]]
+        Label = Enable 2nd HSM 
+        DefaultValue = false
+        Widget.Plugin = pico.form.BooleanCheckBox
+        Widget.Label = (requires storage details below)
+
+        [[[parameter LustreBlobAccount2]]]
+        Label = Storage Account
+        Description = The 2nd blob account to which Lustre will sync.
+        DefaultValue = <2nd blob account name> 
+        Conditions.Disabled := LustreUseHsm2 is false
+
+        [[[parameter LustreBlobSAS2]]]
+        Label = Storage SAS Token
+        Description = The 2nd blob shared access signature token.
+        DefaultValue = <2nd blob SAS token>
+        Conditions.Disabled := LustreUseHsm2 is false
+
+		[[[parameter LustreBlobContainer2]]]
+        Label = Storage Container
+        Description = The 2nd blob container.
+        DefaultValue = <2nd blob container>
+        Conditions.Disabled := LustreUseHsm2 is false
+
+		[[[parameter LustreBlobImportPath2]]]
+        Label = Import Path
+        Description = The folder path to import from the container (Leave blank for all)
+        DefaultValue = ""
+        Conditions.Disabled := LustreUseHsm2 is false
+			
+    [[parameters Log Analytics Settings]]
+    Order = 30
+    Description = "Store node metrics to Log Analytics."
+
+        [[[parameter LustreUseLogAnalytics]]]
+        Label = Enable Log Analytics
+        DefaultValue = false
+        Widget.Plugin = pico.form.BooleanCheckBox
+        Widget.Label = (requires log analytics details below)
+
+        [[[parameter LogAnalyticsName]]]
+        Label = Name
+        Description = The log name.
+        DefaultValue = <name>
+        Conditions.Disabled := LustreUseLogAnalytics is false
+
+        [[[parameter LogAnalyticsWorkspaceId]]]
+        Label = Log Analytics Workspace Id
+        Description = The workspace Id to store the log.
+        DefaultValue = <workspace id>
+        Conditions.Disabled := LustreUseLogAnalytics is false
+
+		[[[parameter LogAnalyticsKey]]]
+        Label = Log Analytics Key
+        Description = The log analytics key.
+        DefaultValue = <key>
+        Conditions.${AdditionalNAS isnt true} := LustreUseLogAnalytics is false
+ 
+[parameters Robinhood Settings]
+Order = 40
+
+    [[parameters Robinhood General Settings]]
+    Order = 10
+	Description = "Settings for defining the Robinhood server and configuration"
+        
+		[[[parameter RobinImageName]]]
+		Label = Robinhood Base OS
+		ParameterType = Cloud.Image
+		Config.OS = linux
+		DefaultValue = azhpc:azurehpc-lustre:azurehpc-lustre-2_12:latest
+		Config.Filter := Package === "cycle.image.centos7"
+	
+		[[[parameter policyServerClusterInitSpecs]]]
+		Label = Policy Server Cluster-Init
+		DefaultValue = =undefined
+		Description = Cluster init specs to apply to the policy server node
+		ParameterType = Cloud.ClusterInitSpecs
+	
+	[[parameters Lustre Client Settings]]
+    Order = 15
+	Description = "Settings for defining the Lustre Client on the Robinhood server"
+	
+		[[[parameter RobinLustreVersion]]]
+		Label = Lustre Client Version
+		Description = The Lustre version to use on robinhood server
+		DefaultValue = "2.12.5"
+		Config.FreeForm = true
+		Config.Plugin = pico.control.AutoCompleteDropdown
+			[[[[list Config.Entries]]]]
+			Name = "2.12.4"
+			Label = "2.12.4"
+			[[[[list Config.Entries]]]]
+			Name = "2.12.5"
+			Label = "2.12.5"		
+			[[[[list Config.Entries]]]]
+			Name = "2.12.7"
+			Label = "2.12.7"
+		
+		[[[parameter RobinLustreMountPoint]]]
+		Label = Lustre Mount Point
+		Description = The mount point to mount the Lustre file server on.
+		DefaultValue = /lustre
+		Required = True    
+
+	[[parameters Robinhood Post Script]]
+    Order = 20
+	Description = "Post Script setting and path for Robinhood"
+
+		[[[parameter ExecutePostScript]]]
+		Label = Execute Post Script
+		DefaultValue = false
+		Widget.Plugin = pico.form.BooleanCheckBox
+
+		[[[parameter PostScriptPath]]]
+		Label = Path of post script
+		Description = Enter the static or private IP address the head node will use
+		DefaultValue = "/lustre/robinhood/robinhood-post-script.sh"
+		Conditions.Excluded := ExecutePostScript is false
+		
+	[[parameters External Policy File]]
+    Order = 25
+	Description = "External policy file and path for Robinhood"	
+		
+		[[[parameter AdditionalPolicyFile]]]
+		Label = Use external file
+		DefaultValue = false
+		Widget.Plugin = pico.form.BooleanCheckBox
+
+		[[[parameter RobinhoodPolicyFile]]]
+		Label = Robinhood Policy File
+		Description = Name of the Robinhood policy file to include as part of the policies.  Needs to be full path to file.
+		DefaultValue = /lustre/robinhood/rh_policy.inc
+		Conditions.Excluded := AdditionalPolicyFile isnt true
+	
+
+[parameters Telegraf Settings]
+Order = 50
+
+    [[parameters General Telegraf Settings]]
+    Order = 10
+    Description = "Use Telegraf to enable report, logging, and graphing data of the nodes"
+
+        [[[parameter UseTelegraf]]]
+        Label = Enable Telegraf
+        DefaultValue = false
+        Widget.Plugin = pico.form.BooleanCheckBox
+        Widget.Label = (requires configuration details below)
+
+        [[[parameter TelegrafURL]]]
+        Label = InfluxDB URL
+        Description = The URL of the InfluxDB node
+        DefaultValue = http://192.168.0.1:8086 
+        Conditions.Disabled := UseTelegraf is false
+
+        [[[parameter TelegrafToken]]]
+        Label = Authorization Token
+        Description = The telegraf authorization token.
+        DefaultValue = <telegraf token>
+        Conditions.Disabled := UseTelegraf is false
+
+		[[[parameter TelegrafOrg]]]
+        Label = Organization
+        Description = Name of the organization you wish to write to
+        DefaultValue = <My Org>
+        Conditions.Disabled := UseTelegraf is false
+
+		[[[parameter TelegrafBucket]]]
+        Label = Bucket
+        Description = Destination Bucket to write into
+        DefaultValue = LustreProd
+        Conditions.Disabled := UseTelegraf is false
