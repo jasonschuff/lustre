@@ -51,7 +51,7 @@ echo '"ID","FileName","LHSMStatus","LastAccess","LastMod","Type","UID","GID","Pa
 # Run the SQL command to export the data to a temporary data file
 mysql -D lustre_robinhood -e "
 SELECT 
-    NAMES.id AS ID,
+    ENTRIES.id AS ID,
     NAMES.name AS FileName,
     ENTRIES.lhsm_status AS LHSMStatus,
     ENTRIES.last_access AS LastAccess,
@@ -64,9 +64,9 @@ FIELDS TERMINATED BY ','
 ENCLOSED BY '\"'
 LINES TERMINATED BY '\n'
 FROM 
-    NAMES
-JOIN 
-    ENTRIES ON NAMES.id = ENTRIES.id
+    ENTRIES
+LEFT JOIN 
+    NAMES ON ENTRIES.id = NAMES.id
 $sql_where_clause;
 "
 
